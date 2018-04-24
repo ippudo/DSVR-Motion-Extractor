@@ -155,6 +155,9 @@ class AnmHelper:
 		filelength=statinfo.st_size;
 		file=open(filepath,'rb');
 	
+		file.seek(4,0);
+		totaltime=unpack("I",file.read(4))[0];
+
 		file.seek(16,0);
 		addr02=unpack("I",file.read(4))[0];
 		addr03=unpack("I",file.read(4))[0];
@@ -215,7 +218,7 @@ class AnmHelper:
 
 		file.close();
 
-		return sections;
+		return [totaltime,sections];
 
 	@staticmethod
 	def tongji28(datas):
