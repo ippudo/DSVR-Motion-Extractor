@@ -79,9 +79,36 @@ class AnmHelper:
 
 	@staticmethod
 	def RatioNum(num):
-		#if num&16384>0:
-		#	return -(num-16384)/16384;
-		return num/16384;
+		return num/16384-1;
+
+	@staticmethod
+	def NumRatio(num):
+		return int((num+1)*16384) & 0x7fff;
+
+	@staticmethod
+	def C28toQ(nums):
+		newq=nums[0:2];
+		newq.insert(nums[3],1);
+		newbase=sqrt(newq[0]*newq[0]+newq[1]*newq[1]+newq[2]*newq[2]+newq[3]*newq[3]);
+		newq[0]/=newbase;
+		newq[1]/=newbase;
+		newq[2]/=newbase;
+		newq[3]/=newbase;
+		return newq;
+
+	@staticmethod
+	def QtoC28(nums):
+		maxnum=0;
+		for i in range(1,4):
+			if nums[maxnum]<nums[i]:
+				maxnum=i;
+		newc=nums[:];
+		maxdat=nums[i];
+		newc.pop(i);
+		newc[0]/=maxdat;
+		newc[1]/=maxdat;
+		newc[2]/=maxdat;
+		return newc;
 
 	@staticmethod
 	def Read28(bytes):
@@ -92,6 +119,15 @@ class AnmHelper:
 		bytx=bytes[0]&3;
 		#return [AnmHelper.HalfFloatNum(byth),AnmHelper.HalfFloatNum(bytm),AnmHelper.HalfFloatNum(bytl),bytx];
 		return [AnmHelper.RatioNum(byth),AnmHelper.RatioNum(bytm),AnmHelper.RatioNum(bytl),bytx];
+
+	@staticmethod
+	def Write28(nums):
+		byth,bytm,bytl,bytx=nums;
+		byth=AnmHelper.NumRatio(byth);
+		bytm=AnmHelper.NumRatio(bytm);
+		bytl=AnmHelper.NumRatio(bytl);
+		bytept1=bytx+(bytl<<2)+(bytm<<17)+(byth<<32);
+		return bytept1.to_bytes(6,byteorder='little');
 
 	@staticmethod
 	def ReadJoint(filepath,filepath2):
@@ -200,16 +236,13 @@ class AnmHelper:
 					currsec.data.append(AnmHelper.HalfFloat(unpack("6B",currsec.raw[-1])));
 				elif (currsec.tp1==28):
 					currsec.raw.append(file.read(6));
-					#currsec.data.append(unpack("3H",currsec.raw[-1]));
 					currsec.data.append(AnmHelper.Read28(unpack("6B",currsec.raw[-1])));
 					currsec.testdata.append(list(map(lambda x:hex(x),unpack("6B",currsec.raw[-1]))));
 				else:
 					currsec.raw.append(file.read(6));
 					currsec.data.append(AnmHelper.Read28(unpack("6B",currsec.raw[-1])));
-					#currsec.data.append(unpack("6B",file.read(6)));
-					#currsec.data.append([unpack("h",currsec.raw[-1][0:2])[0],unpack("f",currsec.raw[-1][2:6])[0]]);
 				
-			if (currsec.tp1==28):# or currsec.tp1==28):
+			if (currsec.tp1==28):
 				#AnmHelper.tongji(currsec.raw);
 				#AnmHelper.tongji28(currsec.data);
 				foobar=1;
